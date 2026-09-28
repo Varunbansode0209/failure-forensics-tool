@@ -1,0 +1,25 @@
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Test/cache
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Local data
+data/traces/*
+data/evals/*
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
