@@ -10,11 +10,11 @@ from dotenv import load_dotenv
 from google import genai
 
 from app.models.pipeline_models import(ClassificationInput,ClassificationOutput)
-
+from app.tracing.decorator import traced
 load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-
+@traced
 def classification(document: ClassificationInput)-> ClassificationOutput:
     """
     Classify a document using its text and extracted fields.

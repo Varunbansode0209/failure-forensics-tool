@@ -13,12 +13,13 @@ from app.models.pipeline_models import(
     SummarizationInput,
     SummarizationOutput,
 )
+from app.tracing.decorator import traced
 
 load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-
+@traced
 def summarization(document: SummarizationInput) -> SummarizationOutput:
     """
     Generate a concise summary and key points from the processed document.

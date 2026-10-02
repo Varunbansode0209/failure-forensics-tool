@@ -9,11 +9,12 @@ from dotenv import load_dotenv
 from google import genai
 
 from app.models.pipeline_models import ExtractionInput,ExtractionOutput
+from app.tracing.decorator import traced
 
 load_dotenv()
 
 client= genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-
+@traced
 def extraction(document: ExtractionInput) -> ExtractionOutput:
     """
     Extract structured fields from a document.

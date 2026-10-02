@@ -11,12 +11,13 @@ from google import genai
 
 
 from app.models.pipeline_models import IntakeInput,IntakeOutput
-
+from app.tracing.decorator import traced
 
 load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
+@traced
 def intake(document : IntakeInput) -> IntakeOutput:
     """
     Identify the document type and language from raw document text
