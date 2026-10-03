@@ -4,10 +4,7 @@
 # DOCUMENT - INTAKE --document_type-- - EXTRACTION --extraction_field-- - CLASSIFICATION --category-- - SUMMARIZATION - GEMINI 3.8FLASH - STRUCTURE JSON - PYDANTIC VALIDATION - SUMMARIZATIONOUTPUT
 
 
-import os 
 
-from dotenv import load_dotenv
-from google import genai
 
 from app.models.pipeline_models import(
     SummarizationInput,
@@ -15,9 +12,7 @@ from app.models.pipeline_models import(
 )
 from app.tracing.decorator import traced
 
-load_dotenv()
-
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+from app.llm.client import call_llm
 
 @traced
 def summarization(document: SummarizationInput) -> SummarizationOutput:
@@ -63,11 +58,8 @@ Rules:
 - Confidence must be between 0.0 and 1.0.
 """
 
-    interaction = client.interactions.create(
-        model="gemini-3.8-flash",
-        input=prompt
-    )
 
-    result = interaction.output_text
+    llm_result = call_llm(prompt)
+    result = llm_result.text
 
     return SummarizationOutput.model_validate_json(result)
