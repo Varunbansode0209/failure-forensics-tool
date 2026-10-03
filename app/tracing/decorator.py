@@ -3,12 +3,16 @@ import uuid
 from datetime import datetime, timezone
 from functools import wraps
 from typing import Any, Callable
+from contextvars import ContextVar
 
 from app.tracing.span import Span
 from app.tracing.trace import Trace
 
 
-_current_trace: Trace | None = None
+_current_trace: ContextVar[Trace | None] = ContextVar(
+    "current_trace",
+    default=None,
+)
 
 
 def _serialize(value: Any) -> dict[str, Any]:
@@ -31,33 +35,26 @@ def _extract_confidence(output: Any) -> float | None:
     return None
 
 def start_trace() -> Trace:
-    """Create and set a new active trace."""
-    global _current_trace
-
-    _current_trace = Trace(
+    trace = Trace(
         trace_id=str(uuid.uuid4()),
         started_at=datetime.now(timezone.utc),
     )
-
-    return _current_trace
+    _current_trace.set(trace)
+    return trace
 
 
 def get_current_trace() -> Trace | None:
-    """Return the currently active trace."""
-    return _current_trace
+    return _current_trace.get()
 
 
 def end_trace() -> Trace | None:
-    """Finish and return the active trace."""
-    global _current_trace
+    trace = _current_trace.get()
 
-    if _current_trace is not None:
-        _current_trace.ended_at = datetime.now(timezone.utc)
-        _current_trace.status = "completed"
+    if trace is not None:
+        trace.ended_at = datetime.now(timezone.utc)
+        trace.status = "completed"
 
-    trace = _current_trace
-    _current_trace = None
-
+    _current_trace.set(None)
     return trace
 
 
