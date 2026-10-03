@@ -4,18 +4,16 @@
 #THE FLOW IS 
 # RAW TEXT - INTAKE INPUT - OPENAI - JSON RESPONSE - PYDANTIC VALIDATION - INTAKE OUTPUT
 
-import os 
+
 
 from dotenv import load_dotenv
-from google import genai
+
 
 
 from app.models.pipeline_models import IntakeInput,IntakeOutput
 from app.tracing.decorator import traced
+from app.llm.client import call_llm
 
-load_dotenv()
-
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 @traced
 def intake(document : IntakeInput) -> IntakeOutput:
@@ -58,12 +56,10 @@ def intake(document : IntakeInput) -> IntakeOutput:
     {document.document_text}
     """
 
-    interaction = client.interactions.create(
-        model="gemini-3.8-flash",
-        input=prompt
-    )
+    llm_result = call_llm(prompt)
+    result = llm_result.text
 
-    result = interaction.output_text
+    
 
     
 
