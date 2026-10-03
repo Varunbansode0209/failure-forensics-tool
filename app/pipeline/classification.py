@@ -4,16 +4,11 @@
 # Intake - Extraction --document_text + extracted_field - classification - gemini - category+reasoning_confidence - Pydantic validation - ClassificationOutput
 
 
-import os 
 
-from dotenv import load_dotenv
-from google import genai
 
 from app.models.pipeline_models import(ClassificationInput,ClassificationOutput)
 from app.tracing.decorator import traced
-load_dotenv()
-
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+from app.llm.client import call_llm
 @traced
 def classification(document: ClassificationInput)-> ClassificationOutput:
     """
@@ -52,11 +47,7 @@ Rules:
 - Keep reasoning brief.
 """
 
-    interaction = client.interactions.create(
-        model="gemini-3.8-flash",
-        input=prompt
-    )
-
-    result = interaction.output_text
+    llm_result = call_llm(prompt)
+    result = llm_result.text
 
     return ClassificationOutput.model_validate_json(result)
