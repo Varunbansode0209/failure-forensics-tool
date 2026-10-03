@@ -3,17 +3,13 @@
 #FLOW
 # INTAKE - type(document) - extract - gemini 3.8flash --extract relevant fields -- structured JSON - pydantic validation - extraction output 
 
-import os 
 
-from dotenv import load_dotenv
-from google import genai
 
 from app.models.pipeline_models import ExtractionInput,ExtractionOutput
 from app.tracing.decorator import traced
+from app.llm.client import call_llm
 
-load_dotenv()
 
-client= genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 @traced
 def extraction(document: ExtractionInput) -> ExtractionOutput:
     """
@@ -46,15 +42,15 @@ Rules:
 - Do not invent missing values.
 - Use null when a field is not present.
 - Extract fields relevant to the document type.
+- Every field value must be either a string or null.
+- If multiple values exist, combine them into a single string.
+  Example: "ABC Pvt Ltd; XYZ Ltd"
+- Do not return arrays or objects inside "fields".
 - Confidence must be between 0.0 and 1.0.
 """
 
 
-    interaction = client.interactions.create(
-        model="gemini-3.8-flash",
-        input=prompt
-    )
-
-    result = interaction.output_text
+    llm_result = call_llm(prompt)
+    result = llm_result.text
 
     return ExtractionOutput.model_validate_json(result)
