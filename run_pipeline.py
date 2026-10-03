@@ -11,51 +11,56 @@ from app.pipeline.intake import intake
 from app.pipeline.extraction import extraction
 from app.pipeline.classification import classification
 from app.pipeline.summarization import summarization
-
+from app.tracing.decorator import start_trace, end_trace
+from app.storage.json_store import save_trace
 
 def run_pipeline(document_text: str):
-    """
-    Run the complete document processing pipeline.
-    """
+    start_trace()
 
-    # Step 1: Intake
-    intake_result = intake(
-        IntakeInput(document_text=document_text)
-    )
+    try:
+        intake_result = intake(IntakeInput(document_text=document_text))
 
-    # Step 2: Extraction
-    extraction_result = extraction(
-        ExtractionInput(
-            document_text=intake_result.document_text,
-            document_type=intake_result.document_type,
+        extraction_result = extraction(
+            ExtractionInput(
+                document_text=intake_result.document_text,
+                document_type=intake_result.document_type,
+            )
         )
-    )
 
-    # Step 3: Classification
-    classification_result = classification(
-        ClassificationInput(
-            document_text=intake_result.document_text,
-            extracted_fields=extraction_result.fields,
+        classification_result = classification(
+            ClassificationInput(
+                document_text=intake_result.document_text,
+                extracted_fields=extraction_result.fields,
+            )
         )
-    )
 
-    # Step 4: Summarization
-    summarization_result = summarization(
-        SummarizationInput(
-            document_text=intake_result.document_text,
-            document_type=intake_result.document_type,
-            category=classification_result.category,
-            extracted_fields=extraction_result.fields,
+        summarization_result = summarization(
+            SummarizationInput(
+                document_text=intake_result.document_text,
+                document_type=intake_result.document_type,
+                category=classification_result.category,
+                extracted_fields=extraction_result.fields,
+            )
         )
-    )
 
-    return {
-        "intake": intake_result,
-        "extraction": extraction_result,
-        "classification": classification_result,
-        "summarization": summarization_result,
-    }
+        return {
+            "intake": intake_result,
+            "extraction": extraction_result,
+            "classification": classification_result,
+            "summarization": summarization_result,
+        }
 
+    finally:
+        trace = end_trace()
+
+        if trace:
+            file_path = save_trace(trace)
+
+            print("\n===== TRACE =====")
+            print("Trace ID:", trace.trace_id)
+            print("Status:", trace.status)
+            print("Spans:", len(trace.spans))
+            print("Saved to:", file_path)
 
 if __name__ == "__main__":
     document = """

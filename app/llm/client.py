@@ -6,6 +6,7 @@ import time
 from dotenv import load_dotenv
 from google import genai
 from pydantic import BaseModel
+from app.tracing.context import set_llm_result
 
 
 load_dotenv()
@@ -73,7 +74,7 @@ def call_llm(prompt: str, model: str = DEFAULT_MODEL,
         raise LLMError("Gemini returned an empty response")
 
     usage = getattr(interaction, "usage", None)
-    return LLMResult(
+    result = LLMResult(
         text=text,
         prompt=prompt,
         model=model,
@@ -83,3 +84,7 @@ def call_llm(prompt: str, model: str = DEFAULT_MODEL,
         total_tokens=getattr(usage, "total_tokens", None),
         latency_ms=latency_ms,
     )
+
+    set_llm_result(result)
+
+    return result

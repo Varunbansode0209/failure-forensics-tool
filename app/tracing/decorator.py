@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from functools import wraps
 from typing import Any, Callable
 from contextvars import ContextVar
+from app.tracing.context import get_llm_result, clear_llm_result
 
 from app.tracing.span import Span
 from app.tracing.trace import Trace
@@ -86,6 +87,7 @@ def traced(func: Callable) -> Callable:
 
             ended_at = datetime.now(timezone.utc)
             latency_ms = (time.perf_counter() - start_time) * 1000
+            llm_result = get_llm_result()
 
             span = Span(
                 span_id=span_id,
@@ -97,8 +99,14 @@ def traced(func: Callable) -> Callable:
                 started_at=started_at,
                 ended_at=ended_at,
                 latency_ms=latency_ms,
-                
-            )
+                model=llm_result.model if llm_result else None,
+                prompt=llm_result.prompt if llm_result else None,
+                raw_response=llm_result.text if llm_result else None,
+                prompt_tokens=llm_result.prompt_tokens or 0 if llm_result else 0,
+                completion_tokens=llm_result.completion_tokens or 0 if llm_result else 0,
+                thought_tokens=llm_result.thought_tokens if llm_result else None,
+                total_tokens=llm_result.total_tokens or 0 if llm_result else 0,
+                            )
 
             if trace:
                 trace.add_span(span)

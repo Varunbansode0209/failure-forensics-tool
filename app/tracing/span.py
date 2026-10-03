@@ -14,11 +14,11 @@ class Span(BaseModel):
 
     prompt: Optional[str] = None
     raw_response: Optional[str] = None
-
+    model: str | None = None
     prompt_tokens: int = 0
     completion_tokens: int = 0
+    thought_tokens: int | None = None
     total_tokens: int = 0
-
     latency_ms: float = 0.0
 
     confidence: Optional[float] = Field(
